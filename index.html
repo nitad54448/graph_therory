@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Theory Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0c0a09;
+            overflow: hidden;
+        }
+        .main-container {
+            display: flex;
+            height: calc(100vh - 65px);
+        }
+        #left-panel {
+            flex-basis: 320px;
+            flex-shrink: 0;
+            min-width: 250px;
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        #resize-handle {
+            flex-basis: 6px;
+            flex-shrink: 0;
+            cursor: col-resize;
+            background-color: rgba(55, 65, 81, 0.5);
+            transition: background-color 0.2s ease;
+        }
+        #resize-handle:hover {
+            background-color: rgba(30, 144, 255, 0.7);
+        }
+        #right-panel {
+            flex-grow: 1;
+            min-width: 0;
+            background-color: #0c0a09;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            background-color: #111827;
+            cursor: crosshair;
+        }
+        #left-panel::-webkit-scrollbar { width: 8px; }
+        #left-panel::-webkit-scrollbar-track { background: #1f2937; }
+        #left-panel::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        #left-panel::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .select-style {
+             -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23cbd5e1%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right .7rem top 50%;
+            background-size: .65rem auto;
+        }
+    </style>
+</head>
+<body class="text-gray-200 flex flex-col h-screen">
+
+    <header class="text-center py-4 bg-gray-900/80 border-b border-gray-700/50" style="flex-shrink: 0;">
+        <h1 class="text-2xl md:text-3xl text-white">Graph Theory Playground</h1>
+    </header>
+
+    <div class="main-container">
+        <div id="left-panel">
+            <div>
+                <h2 class="text-lg font-semibold text-white mb-3 border-b border-gray-600 pb-2">Controls</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="mode" class="block text-sm font-medium text-gray-300">Mode</label>
+                        <select id="mode" class="w-full mt-1 bg-gray-700 border border-gray-600 text-white rounded-lg p-2 focus:ring-cyan-500 focus:border-cyan-500 select-style">
+                            <option value="addNode">Add Nodes</option>
+                            <option value="addEdge">Add Edges</option>
+                            <option value="move">Move</option>
+                        </select>
+                    </div>
+                     <div class="p-2 border border-gray-700 rounded-lg">
+                        <h3 class="font-semibold text-lime-400">Algorithms</h3>
+                        <div>
+                            <label for="algorithm" class="block text-sm font-medium text-gray-300">Algorithm</label>
+                            <select id="algorithm" class="w-full mt-1 bg-gray-700 border border-gray-600 text-white rounded-lg p-2 focus:ring-cyan-500 focus:border-cyan-500 select-style">
+                                <option value="none" selected>None</option>
+                                <option value="dijkstra">Dijkstra (Weighted Path)</option>
+                                <option value="bfs">BFS (Shortest # Edges)</option>
+                            </select>
+                        </div>
+                        <div id="algo-inputs" class="hidden mt-2 space-y-2">
+                            <div>
+                                <label for="startNode" class="block text-sm font-medium text-gray-300">Start Node</label>
+                                <select id="startNode" class="w-full mt-1 bg-gray-800 border border-gray-600 text-white rounded-lg p-2 focus:ring-cyan-500 focus:border-cyan-500 select-style"></select>
+                            </div>
+                            <div>
+                                <label for="endNode" class="block text-sm font-medium text-gray-300">End Node</label>
+                                <select id="endNode" class="w-full mt-1 bg-gray-800 border border-gray-600 text-white rounded-lg p-2 focus:ring-cyan-500 focus:border-cyan-500 select-style"></select>
+                            </div>
+                            <button id="calculateBtn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-2">Calculate Path</button>
+                        </div>
+                    </div>
+                    <button id="clearBtn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Clear Canvas</button>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-600">
+                     <h3 class="text-md font-semibold text-white mb-2">Instructions</h3>
+                     <ul class="list-disc list-inside space-y-1 text-gray-300 text-sm">
+                        <li><span class="font-semibold">Add Nodes:</span> Click on the canvas.</li>
+                        <li><span class="font-semibold">Add Edges:</span> Click one node, then a second.</li>
+                        <li><span class="font-semibold">Move:</span> Click and drag a node.</li>
+                     </ul>
+                </div>
+            </div>
+            <footer class="mt-auto pt-4">
+                <p class="text-xs text-gray-500 text-center">NitaD, Univ Paris-Saclay, 2025</p>
+            </footer>
+        </div>
+
+        <div id="resize-handle"></div>
+
+        <div id="right-panel">
+            <canvas id="graphCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Element References ---
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const leftPanel = document.getElementById('left-panel');
+            const rightPanel = document.getElementById('right-panel');
+            const resizeHandle = document.getElementById('resize-handle');
+            const modeSelector = document.getElementById('mode');
+            const algorithmSelector = document.getElementById('algorithm');
+            const algoInputs = document.getElementById('algo-inputs');
+            const startNodeSelector = document.getElementById('startNode');
+            const endNodeSelector = document.getElementById('endNode');
+            const clearBtn = document.getElementById('clearBtn');
+            const calculateBtn = document.getElementById('calculateBtn');
+
+            // --- State Variables ---
+            let isResizing = false;
+            let mode = 'addNode';
+            let nodes = [];
+            let edges = [];
+            let nextNodeId = 0;
+            let edgeStartNode = null;
+            let draggingNode = null;
+            let path = [];
+
+            function resizeCanvas() {
+                canvas.width = rightPanel.clientWidth;
+                canvas.height = rightPanel.clientHeight;
+            }
+
+            // --- Event Listeners ---
+            modeSelector.addEventListener('change', (e) => { mode = e.target.value; edgeStartNode = null; });
+            algorithmSelector.addEventListener('change', () => {
+                const algo = algorithmSelector.value;
+                algoInputs.classList.toggle('hidden', algo === 'none');
+                path = []; // Clear path when changing algorithm
+            });
+            calculateBtn.addEventListener('click', runAlgorithm);
+
+            clearBtn.addEventListener('click', () => {
+                nodes = [];
+                edges = [];
+                path = [];
+                nextNodeId = 0;
+                algorithmSelector.value = 'none';
+                algoInputs.classList.add('hidden');
+                updateNodeSelectors();
+            });
+
+            resizeHandle.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none'; });
+            document.addEventListener('mousemove', (e) => { if (isResizing) { const newWidth = e.clientX; if (newWidth > 250 && newWidth < window.innerWidth - 300) { leftPanel.style.flexBasis = `${newWidth}px`; resizeCanvas(); } } });
+            document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; document.body.style.userSelect = ''; });
+            window.addEventListener('resize', resizeCanvas);
+
+            // --- Canvas Interaction ---
+            canvas.addEventListener('mousedown', (e) => {
+                const { x, y } = getMousePos(e);
+                const clickedNode = getNodeAt(x, y);
+
+                if (mode === 'addNode' && !clickedNode) {
+                    nodes.push({ id: nextNodeId++, x, y });
+                    updateNodeSelectors();
+                } else if (mode === 'addEdge' && clickedNode) {
+                    if (!edgeStartNode) {
+                        edgeStartNode = clickedNode;
+                    } else if (edgeStartNode !== clickedNode) {
+                        if (!edges.some(edge => (edge.from === edgeStartNode.id && edge.to === clickedNode.id) || (edge.from === clickedNode.id && edge.to === edgeStartNode.id))) {
+                            const dist = Math.hypot(edgeStartNode.x - clickedNode.x, edgeStartNode.y - clickedNode.y);
+                            edges.push({ from: edgeStartNode.id, to: clickedNode.id, weight: Math.round(dist / 10) });
+                        }
+                        edgeStartNode = null;
+                    }
+                } else if (mode === 'move' && clickedNode) {
+                    draggingNode = clickedNode;
+                }
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (draggingNode) {
+                    const { x, y } = getMousePos(e);
+                    draggingNode.x = x;
+                    draggingNode.y = y;
+                }
+            });
+
+            canvas.addEventListener('mouseup', () => { draggingNode = null; });
+            
+            function getMousePos(e) {
+                const rect = canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            function getNodeAt(x, y) {
+                for (const node of nodes) {
+                    if (Math.hypot(node.x - x, node.y - y) < 15) return node;
+                }
+                return null;
+            }
+
+            // --- Drawing Logic ---
+            function draw() {
+                ctx.fillStyle = '#111827';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw edges
+                edges.forEach(edge => {
+                    const fromNode = nodes.find(n => n.id === edge.from);
+                    const toNode = nodes.find(n => n.id === edge.to);
+                    if (fromNode && toNode) {
+                        ctx.beginPath();
+                        ctx.moveTo(fromNode.x, fromNode.y);
+                        ctx.lineTo(toNode.x, toNode.y);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.fillStyle = '#9ca3af';
+                        ctx.font = '12px Poppins';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(edge.weight, (fromNode.x + toNode.x) / 2, (fromNode.y + toNode.y) / 2 - 10);
+                    }
+                });
+                
+                // Draw path
+                if (path.length > 0) {
+                    const algo = algorithmSelector.value;
+                    ctx.strokeStyle = algo === 'dijkstra' ? '#f43f5e' : '#34d399'; // Rose for Dijkstra, Green for BFS
+                    ctx.lineWidth = 4;
+                    for (let i = 0; i < path.length - 1; i++) {
+                        const fromNode = nodes.find(n => n.id === path[i]);
+                        const toNode = nodes.find(n => n.id === path[i+1]);
+                        if (fromNode && toNode) {
+                             ctx.beginPath();
+                             ctx.moveTo(fromNode.x, fromNode.y);
+                             ctx.lineTo(toNode.x, toNode.y);
+                             ctx.stroke();
+                        }
+                    }
+                }
+
+                // Draw nodes
+                nodes.forEach(node => {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI);
+                    
+                    const isPathNode = path.includes(node.id);
+                    const isStartOrEnd = node.id === parseInt(startNodeSelector.value) || node.id === parseInt(endNodeSelector.value);
+
+                    if (isStartOrEnd && path.length > 0) {
+                        ctx.fillStyle = algorithmSelector.value === 'dijkstra' ? '#f43f5e' : '#34d399';
+                    } else if (isPathNode) {
+                        ctx.fillStyle = '#fb923c';
+                    } else if (node === edgeStartNode) {
+                        ctx.fillStyle = '#34d399';
+                    } else {
+                        ctx.fillStyle = '#22d3ee';
+                    }
+
+                    ctx.fill();
+                    ctx.fillStyle = '#000';
+                    ctx.font = 'bold 14px Poppins';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(node.id, node.x, node.y);
+                });
+            }
+            
+            // --- Algorithm Logic ---
+            function runAlgorithm() {
+                const algo = algorithmSelector.value;
+                path = [];
+                if (algo === 'dijkstra') runDijkstra();
+                if (algo === 'bfs') runBFS();
+            }
+
+            // --- FINAL CORRECTED FUNCTION ---
+            function updateNodeSelectors() {
+                const oldStartId = startNodeSelector.value;
+                const oldEndId = endNodeSelector.value;
+
+                // Clear the selectors using standard DOM removal
+                while (startNodeSelector.firstChild) {
+                    startNodeSelector.removeChild(startNodeSelector.firstChild);
+                }
+                while (endNodeSelector.firstChild) {
+                    endNodeSelector.removeChild(endNodeSelector.firstChild);
+                }
+
+                // Repopulate using document.createElement for reliability
+                nodes.forEach(node => {
+                    const optionStart = document.createElement('option');
+                    optionStart.value = node.id;
+                    optionStart.textContent = `Node ${node.id}`;
+                    startNodeSelector.appendChild(optionStart);
+
+                    const optionEnd = document.createElement('option');
+                    optionEnd.value = node.id;
+                    optionEnd.textContent = `Node ${node.id}`;
+                    endNodeSelector.appendChild(optionEnd);
+                });
+
+                if (nodes.length === 0) return;
+
+                // Check if the previously selected start node still exists
+                const startNodeStillExists = nodes.some(node => node.id == oldStartId);
+                startNodeSelector.value = startNodeStillExists ? oldStartId : nodes[0].id;
+
+                // Check if the previously selected end node still exists and is not the same as the start node
+                const endNodeStillExists = nodes.some(node => node.id == oldEndId);
+                if (endNodeStillExists && oldEndId !== startNodeSelector.value) {
+                    endNodeSelector.value = oldEndId;
+                } else {
+                    // Find a different node for the end selector if possible
+                    const differentNode = nodes.find(node => node.id != startNodeSelector.value);
+                    endNodeSelector.value = differentNode ? differentNode.id : startNodeSelector.value;
+                }
+            }
+
+            function runDijkstra() {
+                if (nodes.length < 2) return;
+                const startId = parseInt(startNodeSelector.value);
+                const endId = parseInt(endNodeSelector.value);
+                // Validate that start and end nodes are actual numbers.
+                if (isNaN(startId) || isNaN(endId)) {
+                    console.error("Start or End node is not selected.");
+                    path = []; // Clear path
+                    return; // Exit if a node is not properly selected
+                }
+                const dist = {}; const prev = {}; const pq = new Set();
+                nodes.forEach(node => { dist[node.id] = Infinity; prev[node.id] = null; pq.add(node.id); });
+                dist[startId] = 0;
+                while (pq.size > 0) {
+                    let u = [...pq].reduce((a, b) => dist[a] < dist[b] ? a : b);
+                    if (u === endId || dist[u] === Infinity) break;
+                    pq.delete(u);
+                    edges.filter(e => e.from === u || e.to === u).forEach(edge => {
+                        const v = edge.from === u ? edge.to : edge.from;
+                        if (pq.has(v)) {
+                            const alt = dist[u] + edge.weight;
+                            if (alt < dist[v]) { dist[v] = alt; prev[v] = u; }
+                        }
+                    });
+                }
+                const newPath = []; let current = endId;
+                if (prev[current] !== null || current === startId) {
+                    while (current !== null) { newPath.unshift(current); current = prev[current]; }
+                }
+                path = (newPath[0] === startId) ? newPath : [];
+            }
+
+            function runBFS() {
+                if (nodes.length < 2) return;
+                const startId = parseInt(startNodeSelector.value);
+                const endId = parseInt(endNodeSelector.value);
+                // Validate that start and end nodes are actual numbers.
+                if (isNaN(startId) || isNaN(endId)) {
+                    console.error("Start or End node is not selected.");
+                    path = []; // Clear path
+                    return;    // Exit if a node is not properly selected
+                }
+                const queue = [[startId]];
+                const visited = new Set([startId]);
+                
+                while (queue.length > 0) {
+                    const currentPath = queue.shift();
+                    const lastNode = currentPath[currentPath.length - 1];
+
+                    if (lastNode === endId) {
+                        path = currentPath;
+                        return;
+                    }
+
+                    const neighbors = edges.filter(e => e.from === lastNode || e.to === lastNode);
+                    for (const edge of neighbors) {
+                        const neighborNodeId = edge.from === lastNode ? edge.to : edge.from;
+                        if (!visited.has(neighborNodeId)) {
+                            visited.add(neighborNodeId);
+                            const newPath = [...currentPath, neighborNodeId];
+                            queue.push(newPath);
+                        }
+                    }
+                }
+                path = []; // No path found
+            }
+
+            // --- Initial Setup ---
+            resizeCanvas();
+            // Use a continuous animation loop for smoothness
+            function animationLoop() {
+                draw();
+                requestAnimationFrame(animationLoop);
+            }
+            animationLoop();
+        });
+    </script>
+</body>
+</html>
